@@ -259,8 +259,10 @@
     <script>
         // Age gate function
         function enterSite() {
-            document.getElementById('age-gate').style.display = 'none';
-            document.getElementById('main-content').style.display = 'block';
+            const ageGate = document.getElementById('age-gate');
+            const mainContent = document.getElementById('main-content');
+            if (ageGate) ageGate.style.display = 'none';
+            if (mainContent) mainContent.style.display = 'block';
             // In a real implementation, you would set a cookie here
         }
         
@@ -289,7 +291,7 @@
         // Fetch latest blog and update READ LATEST buttons
         (function() {
             const cacheBuster = '?_=' + new Date().getTime();
-            fetch('/api/blogs' + cacheBuster)
+            fetch('https://nicholasxdavis.github.io/cultiv8/data.json' + cacheBuster)
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
                     return response.json();

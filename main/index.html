@@ -406,7 +406,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const cacheBuster = '?_=' + new Date().getTime();
-    fetch('/api/blogs' + cacheBuster)
+    fetch('https://nicholasxdavis.github.io/cultiv8/data.json' + cacheBuster)
       .then(response => {
         if (!response.ok) throw new Error('Network response was not ok');
         return response.json();
@@ -484,7 +484,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const cacheBuster = '?_=' + new Date().getTime();
-    fetch('/api/issues' + cacheBuster)
+    fetch('https://nicholasxdavis.github.io/cultiv8/issues.json' + cacheBuster)
       .then(response => {
         if (!response.ok) throw new Error('Network response was not ok');
         return response.json();
@@ -891,7 +891,7 @@ async function initializeNewsletterForm() {
         // Fetch latest blog and update READ LATEST buttons
         (function() {
             const cacheBuster = '?_=' + new Date().getTime();
-            fetch('/api/blogs' + cacheBuster)
+            fetch('https://nicholasxdavis.github.io/cultiv8/data.json' + cacheBuster)
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
                     return response.json();

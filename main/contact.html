@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Fetch latest blog and update READ LATEST buttons
         (function() {
             const cacheBuster = '?_=' + new Date().getTime();
-            fetch('/api/blogs' + cacheBuster)
+            fetch('https://nicholasxdavis.github.io/cultiv8/data.json' + cacheBuster)
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
                     return response.json();
