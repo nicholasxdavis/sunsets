@@ -36,18 +36,30 @@ switch ($path) {
         header('Location: /admin/index.html');
         exit;
         break;
-        
-    case '/api':
-    case '/api/':
+    case '/admin/index.html':
+        include __DIR__ . '/admin/index.html';
+        break;
+    case '/init.php':
+        include __DIR__ . '/init.php';
+        break;
+    
     default:
         if (strpos($path, '/api') === 0) {
             include __DIR__ . '/api/index.php';
             break;
         }
-        
-    default:
-        // Check if it's a static file request
-        if (file_exists('main' . $path)) {
+        // Check if it's a static file request (root, main/, or admin/)
+        if (file_exists(__DIR__ . $path) && !is_dir(__DIR__ . $path)) {
+            $filePath = __DIR__ . $path;
+            $mimeType = mime_content_type($filePath);
+            header('Content-Type: ' . $mimeType);
+            readfile($filePath);
+        } elseif (strpos($path, '/admin/') === 0 && file_exists(__DIR__ . $path)) {
+            $filePath = __DIR__ . $path;
+            $mimeType = mime_content_type($filePath);
+            header('Content-Type: ' . $mimeType);
+            readfile($filePath);
+        } elseif (file_exists('main' . $path)) {
             // Serve static files from main directory
             $filePath = 'main' . $path;
             $mimeType = mime_content_type($filePath);
@@ -63,6 +75,9 @@ switch ($path) {
 
 // Log access for analytics (in production)
 if (!$isDevelopment) {
+    if (!is_dir(__DIR__ . '/logs')) {
+        @mkdir(__DIR__ . '/logs', 0777, true);
+    }
     $logData = [
         'timestamp' => date('Y-m-d H:i:s'),
         'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
@@ -72,7 +87,7 @@ if (!$isDevelopment) {
     ];
     
     // Simple file logging (in production, use proper logging service)
-    error_log(json_encode($logData) . "\n", 3, 'logs/access.log');
+    @error_log(json_encode($logData) . "\n", 3, __DIR__ . '/logs/access.log');
 }
 ?>
 
