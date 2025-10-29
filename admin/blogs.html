@@ -327,6 +327,9 @@
                         </a>
                     </div>
                     <div class="flex items-center space-x-4">
+                        <button id="github-token-btn" class="bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-md text-sm font-medium transition-colors" title="Manage GitHub Token">
+                            <i class="fas fa-key mr-1"></i> GitHub Token
+                        </button>
                         <button id="submit-ticket-btn" class="bg-primary hover:bg-primary-dark px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
                             <i class="fas fa-ticket-alt mr-1"></i> Submit Ticket
                         </button>
@@ -698,27 +701,46 @@
         DATA_FILE: "data.json",
         BLOGS_DIR: "blogs",
         ASSETS_DIR: "assets",
-        TOKEN: "" // Will be populated after fetch
+        TOKEN: "" // Will be loaded from localStorage or prompted
     };
 
-    // Function to fetch and process token
-    async function fetchAndProcessToken() {
-        try {
-            const response = await fetch('https://nicholasxdavis.github.io/cultiv8/auth/auth.txt');
-            if (!response.ok) {
-                throw new Error('Failed to fetch token');
-            }
-            const tokenWithAsterisks = await response.text();
-            // Remove all asterisks from the token
-            CONFIG.TOKEN = tokenWithAsterisks.replace(/\*/g, '');
-        } catch (error) {
-            console.error('Error fetching token:', error);
-            showToast('Error loading authentication token', 'error');
+    // Load GitHub token from localStorage
+    function loadGitHubToken() {
+        const savedToken = localStorage.getItem('github_token');
+        if (savedToken) {
+            CONFIG.TOKEN = savedToken;
+            return true;
         }
+        return false;
     }
 
-    // Call the function to fetch and process the token
-    fetchAndProcessToken();
+    // Prompt for GitHub token if not available
+    function promptForGitHubToken() {
+        return new Promise((resolve, reject) => {
+            const token = prompt('Please enter your GitHub Personal Access Token:');
+            if (token && token.trim()) {
+                CONFIG.TOKEN = token.trim();
+                localStorage.setItem('github_token', CONFIG.TOKEN);
+                showToast('GitHub token saved successfully', 'success');
+                resolve(CONFIG.TOKEN);
+            } else {
+                reject(new Error('GitHub token is required to post blogs'));
+            }
+        });
+    }
+
+    // Ensure token is available before operations
+    async function ensureGitHubToken() {
+        if (!CONFIG.TOKEN) {
+            if (!loadGitHubToken()) {
+                await promptForGitHubToken();
+            }
+        }
+        return CONFIG.TOKEN;
+    }
+
+    // Initialize - try to load token from localStorage
+    loadGitHubToken();
 
     // Function to show toast message
     function showToast(message, type = 'success') {
@@ -1512,6 +1534,30 @@ async function createBlogHTMLFile(title, contentBlocks, featuredImageUrl) {
         // Set up event listeners
         document.getElementById('add-blog-btn').addEventListener('click', openCreateModal);
         
+        // GitHub Token management
+        document.getElementById('github-token-btn').addEventListener('click', async () => {
+            const currentToken = localStorage.getItem('github_token');
+            const message = currentToken 
+                ? 'GitHub token is currently saved. Choose an option:\n\n1. Click OK to update the token\n2. Click Cancel to keep current token'
+                : 'No GitHub token found. Click OK to enter a new token.';
+            
+            if (confirm(message)) {
+                const newToken = prompt('Enter your GitHub Personal Access Token:', currentToken || '');
+                if (newToken && newToken.trim()) {
+                    localStorage.setItem('github_token', newToken.trim());
+                    CONFIG.TOKEN = newToken.trim();
+                    showToast('GitHub token updated successfully', 'success');
+                } else if (newToken === '') {
+                    // User entered empty string - ask if they want to clear
+                    if (confirm('Do you want to remove the saved token?')) {
+                        localStorage.removeItem('github_token');
+                        CONFIG.TOKEN = '';
+                        showToast('GitHub token removed', 'success');
+                    }
+                }
+            }
+        });
+        
         document.getElementById('close-edit-modal').addEventListener('click', closeEditModal);
         document.getElementById('cancel-edit-btn').addEventListener('click', closeEditModal);
         
@@ -1558,6 +1604,14 @@ async function createBlogHTMLFile(title, contentBlocks, featuredImageUrl) {
         // Create new blog
         document.getElementById('create-blog-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Ensure GitHub token is available before proceeding
+            try {
+                await ensureGitHubToken();
+            } catch (error) {
+                showToast(error.message, 'error');
+                return;
+            }
             
             const title = document.getElementById('blog-title').value;
             const description = document.getElementById('blog-description').value;
@@ -2116,8 +2170,7 @@ async function createBlogHTMLFile(title, contentBlocks, featuredImageUrl) {
     const rememberMe = document.getElementById('remember-me').checked;
 
     const validUsers = {
-        'whitney@cultiv8.com': 'cultiv8MAG',
-        'nic': '2900',
+        'nic@blacnova.net': '2900',
         'admin': 'CuLTIV8MaG'
     };
 
